@@ -2,6 +2,8 @@ package net.dksmith.springrestmvc.controllers;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +17,7 @@ import net.dksmith.springrestmvc.domain.Client;
 import net.dksmith.springrestmvc.services.ClientService;
 
 /*
- * Will recieve http requests and execute actions on the 
+ * Will receive http requests and execute actions on the 
  * db through the ClientService
  */
 
@@ -38,6 +40,13 @@ public class ClientController {
 	@GetMapping("/{id}")
 	public Client getClient(@PathVariable Long id) {
 		return clientService.findCustomerByID(id);
+	}
+	
+	@GetMapping("/request-info")
+	public Client reflectRequestInfo(HttpServletRequest request, Client client) {
+		client.setFromRequest(request);
+		clientService.saveClient(client);
+		return client;
 	}
 
 	@PostMapping
