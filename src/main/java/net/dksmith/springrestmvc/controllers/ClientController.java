@@ -32,6 +32,10 @@ public class ClientController {
 		this.clientService = clientService;
 	}
 	
+	/*
+	 * GET Mappings
+	 */
+	
 	@GetMapping
 	public List<Client> getAllClients(){
 		return clientService.findAllClients();
@@ -49,6 +53,10 @@ public class ClientController {
 		return client;
 	}
 
+	/*
+	 * POST Mappings
+	 */
+	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	// NOTE: because we annotate RequestBody, jackson library parses POST json into client object
