@@ -19,10 +19,5 @@ public class SpringRestMvcApplicationTests {
 	public void contextLoads() {
 		assertThat(controller).isNotNull();
 	}
-	
-	@Test
-	public void test() {
-		
-	}
 
 }

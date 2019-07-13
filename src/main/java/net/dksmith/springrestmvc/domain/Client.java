@@ -29,7 +29,7 @@ public class Client {
 	private String userAgent;
 	
 	@Transient
-	private static final String[] PROXY_INDICATOR_HEADERS = {
+	public static final String[] PROXY_INDICATOR_HEADERS = {
 			"X-Forwarded-For",
 			"Proxy-Client-IP",
 			"WL-Proxy-Client-IP",
