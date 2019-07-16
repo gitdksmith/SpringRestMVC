@@ -45,13 +45,6 @@ public class ClientController {
 	public Client getClient(@PathVariable Long id) {
 		return clientService.findCustomerByID(id);
 	}
-	
-	@GetMapping("/request-info")
-	public Client reflectRequestInfo(HttpServletRequest request, Client client) {
-		client.setFromRequest(request);
-		clientService.saveClient(client);
-		return client;
-	}
 
 	/*
 	 * POST Mappings

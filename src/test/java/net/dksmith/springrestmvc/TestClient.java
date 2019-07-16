@@ -16,7 +16,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import net.dksmith.springrestmvc.domain.Client;
 
 @RunWith(MockitoJUnitRunner.class)
-//@SpringBootTest
 public class TestClient {
 	
 	@Mock
