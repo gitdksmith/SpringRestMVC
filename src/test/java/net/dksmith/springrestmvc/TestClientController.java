@@ -22,20 +22,40 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * SpringBootTest annotation allows us to run a test web environment over a random port.
+ * It also registers a TestRestTemplate which allows to perform HTTP requests (using 
+ * springframwork.http RequestEntity, ResponseEntity, Http[Entity|Status|Headers] to 
+ * set options).
+ * 
+ * Basic authentication can be used if security is enabled.
+ *  
+ * @author Derek Smith
+ *
+ */
+ 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = SpringRestMvcApplication.class)
 public class TestClientController {
 	
-	@LocalServerPort
-	private int  port;
+	@LocalServerPort //Since we are using RANDOM_PORT web env, this annotation provides the port to us.
+	private int port;
 	
-	@Value("${server.address}")
+	@Value("${server.address}") //A way to get properties from application.properties file
 	private String address;
 	
 	@Autowired
 	TestRestTemplate restTemplate;
 	HttpHeaders headers = new HttpHeaders(); //useful if we want to set header values to pass into entity
 	
+	/**
+	 * Creates a {@link RequestEntity} and executes it with {@link TestRestTemplate} exchange, done in {@link #doGet}.
+	 * Uses {@link ObjectMapper} from  jackson.databind to create a {@link JsonNode} from the {@link ResponseEntity}.
+	 * <p>Asserts there is greater than one json entry.</p>
+	 * 
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
 	@Test
 	public void testGetAllClients() throws URISyntaxException, IOException {
 		String body = "{\"ip\":\"testIP\", \"userAgent\":\"testUserAgent\"}";		
@@ -49,18 +69,24 @@ public class TestClientController {
 		assertThat(getResponseJsonNode.size()).isGreaterThan(1);
 	}
 	
+	/**
+	 * Asserts http status code returned by post is CREATED.
+	 * @throws URISyntaxException
+	 */
 	@Test
 	public void testCreateClientReturnCode() throws URISyntaxException {
 		String body = "{\"ip\":\"testIP\", \"userAgent\":\"testUserAgent\"}";
-		
-		// OK working with http stuff gets pretty messy. You can do it several ways:
-		// Create an HttpHeader object, then an HttpEntity object using that header,
-		// then a RequestEntity object using that HttpEntity.
-		// Or try and squish it into one as below.
 		ResponseEntity<String> response = doPost(new URI(createURL(address, port,"/api/v1/clients/", false)), body); 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 	}
 	
+	/**
+	 * Uses Request and Response Entity to perform post and get requests using TestRestTemple exchange.
+	 * Parses returned string to json using ObjectMapper and JsonNode
+	 * <p>Asserts the returned ip and user-agent are equal to what was posted.</p>
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
 	@Test
 	public void testCreateAndAGetClient() throws URISyntaxException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -83,12 +109,23 @@ public class TestClientController {
 		assertThat(getResponseUA).isEqualTo("testUserAgent");
 	}
 	
+	/**
+	 * Does {@link TestRestTemplate} post exchange with given {@link URI} and body.
+	 * @param uri
+	 * @param body
+	 * @return
+	 */
 	private ResponseEntity<String> doPost(URI uri, String body) {
 		RequestEntity<String> putRequest = RequestEntity.post(uri)
 				.contentType(MediaType.APPLICATION_JSON).body(body, String.class);
 		return restTemplate.exchange(putRequest, String.class);
 	}
-	
+
+	/**
+	 * Does {@link TestRestTemplate} get exchange with given {@link URI}.
+	 * @param uri
+	 * @return ResponseEntity
+	 */
 	private ResponseEntity<String> doGet(URI uri) {
 		RequestEntity<Void> getRequest = RequestEntity.get(uri)
 				.accept(MediaType.APPLICATION_JSON).build();

@@ -15,7 +15,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import net.dksmith.springrestmvc.domain.Client;
 
-@RunWith(MockitoJUnitRunner.class)
+/**
+ * Tests Client class using mocked servlet. 
+ * <p>Running with MockitoJUnitRunner allows us to mock objects, like our HttpServletRequest,
+ * by using the @Mock annotation. This means we can test the Client class without having
+ * to start a server or create real http requests.</p>
+ * <p>We use StrictStubs to help find problems, like setting unused stubs in the mock, or 
+ * stubbed argument mismatches.</p>
+ * @author Derek Smith
+ *
+ */
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class TestClient {
 	
 	@Mock
@@ -31,9 +41,20 @@ public class TestClient {
 		client = new Client();
 	}
 	
+	/*
+	 * Not going to add method comments for each since they follow the same pattern:
+	 * 1. Use Mockito to set the value we want returned when calling specific methods
+	 * on the mocked request.
+	 * 2. Passed mocked request to client methods
+	 * 3. Assert client object variables were set from the mocked request
+	 */
 	@Test
 	public void testSetFromRequest() {
-		Mockito.when(request.getHeader("user-agent")).thenReturn(userAgent);
+		// Why do we use lenient() here?
+		// In the client class we call request.getHeader on this same request, but using a list
+		// of possible header strings as arguments. Since those arguments do not match "user-agent"
+		// it is seen as a possible "stubbed argument mismatch".
+		Mockito.lenient().when(request.getHeader("user-agent")).thenReturn(userAgent);
 		Mockito.when(request.getRemoteAddr()).thenReturn(remoteAddr);
 		client.setFromRequest(request);
 		assertThat(client.getUserAgent()).isEqualTo(userAgent);
@@ -51,11 +72,16 @@ public class TestClient {
 	@Test
 	public void testSetIpFromRequest_WithProxyPresent() {
 		Mockito.when(request.getRemoteAddr()).thenReturn(proxyAddr);
-		for(String s: Client.PROXY_INDICATOR_HEADERS) {
-			Mockito.when(request.getHeader(s)).thenReturn(remoteAddr);
+		for(String proxyIndicator: Client.PROXY_INDICATOR_HEADERS) {
+//			Mockito.when(request.getHeader(proxyIndicator)).thenReturn(remoteAddr);
+			// here we are told to follow the format below because of strict stubbing.
+			// I dont really know why it makes a difference
+			Mockito.doReturn(remoteAddr).when(request).getHeader(proxyIndicator);
 			client.setIp(request);
 			assertThat(client.getIp()).isEqualTo(remoteAddr);
 			assertThat(client.getProxyIp()).isEqualTo(proxyAddr);
+//			Mockito.when(request.getHeader(proxyIndicator)).thenReturn("");
+			Mockito.doReturn("").when(request).getHeader(proxyIndicator);
 		}
 	}
 	
