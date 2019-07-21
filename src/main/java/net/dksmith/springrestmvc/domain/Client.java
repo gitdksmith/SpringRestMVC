@@ -1,5 +1,7 @@
 package net.dksmith.springrestmvc.domain;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 
 import javax.persistence.Entity;
@@ -9,11 +11,14 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
 
-import lombok.Data;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
 
-/*
+import lombok.Data;
+import net.dksmith.springrestmvc.services.GeoIpService;
+
+/**
  * This will be transformed as a table via the Entity annotation
- * NOTE: Make sure to enable annotation processing in your IDE
+ * <p>NOTE: Make sure to enable annotation processing in your IDE</p>
  */
 
 @Data // NOTE: project lombok providing getters and setters for this class
@@ -27,6 +32,7 @@ public class Client {
 	private String ip;
 	private String proxyIp;
 	private String userAgent;
+	private String countryOrigin;
 	
 	@Transient
 	public static final String[] PROXY_INDICATOR_HEADERS = {
@@ -43,9 +49,30 @@ public class Client {
 			"REMOTE_ADDR"
 	};
 	
-	public void setFromRequest(HttpServletRequest request) {
+	public void setFromRequest(HttpServletRequest request, GeoIpService geoIpService) {
 		setIp(request);
 		setUserAgent(request);
+		setCountry(ip, geoIpService);
+	}
+	
+	public void setCountry(String ip, GeoIpService geoIpService) {
+		if(ip == null || geoIpService == null) {
+			this.countryOrigin = null;
+			return;
+		}
+		
+		String foundCountry = null;
+		try {
+			foundCountry = geoIpService.lookupCountry(ip);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (GeoIp2Exception e) {
+			e.printStackTrace();
+		}
+		
+		this.countryOrigin = foundCountry;
 	}
 	
 	public void setIp(String ip) {

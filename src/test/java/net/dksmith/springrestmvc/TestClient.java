@@ -3,6 +3,9 @@ package net.dksmith.springrestmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
@@ -13,7 +16,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+
 import net.dksmith.springrestmvc.domain.Client;
+import net.dksmith.springrestmvc.services.GeoIpService;
 
 /**
  * Tests Client class using mocked servlet. 
@@ -30,6 +36,10 @@ public class TestClient {
 	
 	@Mock
 	HttpServletRequest request;
+	
+	@Mock
+	GeoIpService geoIpService;
+	
 	Client client;
 	
 	String userAgent = "mockUserAgent";
@@ -49,16 +59,20 @@ public class TestClient {
 	 * 3. Assert client object variables were set from the mocked request
 	 */
 	@Test
-	public void testSetFromRequest() {
+	public void testSetFromRequest() throws UnknownHostException, IOException, GeoIp2Exception {
 		// Why do we use lenient() here?
 		// In the client class we call request.getHeader on this same request, but using a list
 		// of possible header strings as arguments. Since those arguments do not match "user-agent"
 		// it is seen as a possible "stubbed argument mismatch".
 		Mockito.lenient().when(request.getHeader("user-agent")).thenReturn(userAgent);
 		Mockito.when(request.getRemoteAddr()).thenReturn(remoteAddr);
-		client.setFromRequest(request);
+		Mockito.when(geoIpService.lookupCountry(Mockito.anyString())).thenReturn("United States");
+		
+		client.setFromRequest(request, geoIpService);
+		
 		assertThat(client.getUserAgent()).isEqualTo(userAgent);
 		assertThat(client.getIp()).isEqualTo(remoteAddr);
+		assertThat(client.getCountryOrigin()).isEqualTo("United States");
 
 	}
 	

@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,13 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import net.dksmith.springrestmvc.controllers.WebviewController;
+import net.dksmith.springrestmvc.services.GeoIpService;
 
 /**
  * Here we use WebMvcTest instead of SpringBootTest so that we only start the 
  * specified controller. Useful when there is no need to start the service or
  * repository classes.
  * 
- * Also check out @AutoConfigureMockMvc annotation
+ * <p>Also check out @AutoConfigureMockMvc annotation</p>
  * 
  * @author Derek Smith
  *
@@ -31,6 +33,7 @@ import net.dksmith.springrestmvc.controllers.WebviewController;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(WebviewController.class)
+@Import(GeoIpService.class) // Because we are importing this class, this is no longer a pure controller test. Should mock GeoIpService and create a separate integration test.
 public class TestWebviewController {
 	
 	@Autowired
@@ -61,9 +64,9 @@ public class TestWebviewController {
 	 */
 	public void testReflectRequestInfo() throws Exception {
 		MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(new URI("/request-info"))
-				.header("user-agent", "testUserAgent").with(remoteAddr("10.0.0.99"));
+				.header("user-agent", "testUserAgent").with(remoteAddr("192.203.230.10"));
 		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
-		assertThat(result.getResponse().getContentAsString()).contains("10.0.0.99", "testUserAgent");
+		assertThat(result.getResponse().getContentAsString()).contains("192.203.230.10", "testUserAgent", "United States");
 	}
 	
 	private static RequestPostProcessor remoteAddr(final String remoteAddr) {
