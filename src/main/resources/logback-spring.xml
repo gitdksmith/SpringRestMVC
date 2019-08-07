@@ -1,0 +1,32 @@
+<configuration debug="true">
+	<property scop="context" name="fileName" value="SpringRestMvc"/>
+	<property scop="context" name="logDirectory" value="./logs"/>
+
+	<appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logDirectory}/${fileName}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- daily rollover -->
+			<fileNamePattern>${logDirectory}/archive/${fileName}.%d{yyyy-MM-dd}.log</fileNamePattern>
+			
+			<!-- keep 30 days of history capped at 10MB total size -->
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>10MB</totalSizeCap>
+		</rollingPolicy>
+		
+		<encoder>
+			<pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
+	<appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
+	<root level="WARN">
+		<appender-ref ref="RollingFile" />
+		<appender-ref ref="Console" />
+	</root>
+
+</configuration>

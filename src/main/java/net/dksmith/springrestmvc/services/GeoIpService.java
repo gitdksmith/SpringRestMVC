@@ -7,8 +7,11 @@ import java.net.UnknownHostException;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 
@@ -28,9 +31,11 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
  *
  */
 
-@Component
+@Service
 public class GeoIpService{
 
+	private Logger logger = LoggerFactory.getLogger(GeoIpService.class);
+	
 	@Value("${maxmind.country.file}")
 	private String dbLocation;
 	
@@ -41,8 +46,20 @@ public class GeoIpService{
 		dbReader = new DatabaseReader.Builder(new File(dbLocation)).build();
 	}
 	
-	public String lookupCountry(String ip) throws UnknownHostException, IOException, GeoIp2Exception {
-		return dbReader.country(InetAddress.getByName(ip)).getCountry().getName();
+	public String lookupCountry(String ip){
+		if(ip == null || ip.length() == 0) return null;
+		
+		String countryName = null;
+		try {
+			countryName = dbReader.country(InetAddress.getByName(ip)).getCountry().getName();
+		} catch (UnknownHostException e) {
+			logger.warn("InetAddress unknown host for ip: {}, exception: {}", ip, e);
+		} catch (IOException e) {
+			logger.error("Unable to read MaxMind database: {}", e);
+		} catch (GeoIp2Exception e) {
+			logger.error("GeoIp2 exception {}", e.getMessage());
+		}
+		return countryName;
 	}
 
 }

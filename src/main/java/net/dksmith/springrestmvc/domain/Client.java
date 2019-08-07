@@ -1,7 +1,5 @@
 package net.dksmith.springrestmvc.domain;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 
 import javax.persistence.Entity;
@@ -10,8 +8,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
-
-import com.maxmind.geoip2.exception.GeoIp2Exception;
 
 import lombok.Data;
 import net.dksmith.springrestmvc.services.GeoIpService;
@@ -24,7 +20,7 @@ import net.dksmith.springrestmvc.services.GeoIpService;
 @Data // NOTE: project lombok providing getters and setters for this class
 @Entity
 public class Client {
-
+	
 	@Id // indicates this is primary key
 	@GeneratedValue(strategy = GenerationType.IDENTITY) //TODO look up the GenerationType differences
 	private Long id;
@@ -60,19 +56,7 @@ public class Client {
 			this.countryOrigin = null;
 			return;
 		}
-		
-		String foundCountry = null;
-		try {
-			foundCountry = geoIpService.lookupCountry(ip);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (GeoIp2Exception e) {
-			e.printStackTrace();
-		}
-		
-		this.countryOrigin = foundCountry;
+		this.countryOrigin = geoIpService.lookupCountry(ip);
 	}
 	
 	public void setIp(String ip) {
@@ -83,12 +67,12 @@ public class Client {
 		for(String header : PROXY_INDICATOR_HEADERS) {
 			String possibleIp = request.getHeader(header);
 			if (possibleIp != null && possibleIp.length() != 0 && !"unknown".equalsIgnoreCase(possibleIp)) {
-				ip = possibleIp;
+				this.ip = possibleIp;
 				proxyIp = request.getRemoteAddr();
 				return;
 			}
 		}
-		ip = request.getRemoteAddr();
+		this.ip = request.getRemoteAddr();
 		proxyIp = null;
 	}
 	

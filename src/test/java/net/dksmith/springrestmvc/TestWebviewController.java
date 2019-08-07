@@ -69,6 +69,18 @@ public class TestWebviewController {
 		assertThat(result.getResponse().getContentAsString()).contains("192.203.230.10", "testUserAgent", "United States");
 	}
 	
+	@Test
+	/**
+	 * MaxMind will not know an internal ip country. Country should be null.
+	 * @throws Exception
+	 */
+	public void testReflectRequestInfoUnknownIp() throws Exception {
+		MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(new URI("/request-info"))
+				.header("user-agent", "testUserAgent").with(remoteAddr("10.0.0.1"));
+		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
+		assertThat(result.getResponse().getContentAsString()).contains("10.0.0.1", "testUserAgent", "null");
+	}
+	
 	private static RequestPostProcessor remoteAddr(final String remoteAddr) {
 		return new RequestPostProcessor() {
 			@Override
